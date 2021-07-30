@@ -109,7 +109,8 @@ function buildTheLayout($parsed_log) {
     $html .= '<p id="scroll-to-top">Scroll to Top</p>';
     $html .= '<div class="total-requests">';
     // Show total count
-    $html .= 'Total Requests: ' . count($parsed_log[0]);
+    $total_requests = count($parsed_log[0]);
+    $html .= 'Total Requests: ' . $total_requests;
     // Loop through the combined log
     foreach ($request_statuses as $status=>$count) {
         // Play with the backgrounds for certain status codes
@@ -119,7 +120,7 @@ function buildTheLayout($parsed_log) {
         if ($status >= 300 && $status < 400) {$background='yellow';$color = 'black';}
         if ($status >= 400 && $status < 500) {$background='orange';$color = 'black';}
         if ($status >= 500 && $status <= 600) {$background='red';$color = 'white';}
-        $html .= '<p>Status: <span style="background:' . $background . ';color:' . $color . ';">' . $status . '</span> - ' . $count . '</p>';
+        $html .= '<p>Status: <span style="background:' . $background . ';color:' . $color . ';">' . $status . '</span> - ' . $count . ' (' . round(($count / $total_requests) * 100, 2) . '%)</p>';
     }
     $html .= '</div>';
     $html .= '</div>';
