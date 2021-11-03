@@ -1,3 +1,4 @@
+/*
 function filterTable($index) {
     var inputs = document.getElementById('search_' + $index);
     filter = inputs.value.toUpperCase();
@@ -49,3 +50,38 @@ function animateToTop() {
 }
 
 document.getElementById('scroll-to-top').addEventListener("click", function() {animateToTop()}, false);
+*/
+function isHidden(el) {
+    var style = window.getComputedStyle(el);
+    return ((style.display === 'none') || (style.visibility === 'hidden'))
+}
+
+
+function filterTables() {
+  const query = q => document.querySelectorAll(q);
+  const filters = [...query('th input')].map(e => new RegExp(e.value, 'i'));
+
+  query('tbody tr').forEach(row => row.style.display = 
+    filters.every((f, i) => f.test(row.cells[i].textContent)) ? '' : 'none');
+    // Count results
+    let all = document.getElementsByTagName("tr");
+    let count = 0;
+    for (var i = 0, max = all.length; i < max; i++) {
+        if (isHidden(all[i])) {
+            // hidden
+        } else { 
+            count++;
+        }
+    }
+    document.getElementById("results").innerHTML = count - 1; // -1 because of the thead <tr>. We exclude it from the results
+}
+
+const searchInputs = document.getElementsByClassName('searchRequests');
+
+if (searchInputs) {
+    for (let i = 0; i < searchInputs.length; i++) {
+        searchInputs[i].addEventListener("keyup", filterTables, false);
+    }
+}
+
+document.getElementById("results").innerHTML = document.getElementsByTagName("tr").length - 1;
