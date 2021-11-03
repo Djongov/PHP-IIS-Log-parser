@@ -69,7 +69,7 @@ if (count($files_array) > 0) {
     echo '<p>Log files in the directory:</p>';
     echo '<div style="width: 100%; word-break: break-word;">';
     foreach ($sorted_array as $file) { 
-        echo '<p>Log File: <a href="./file.php?path=' . $path . '&file=' . $file . '" target="_blank" title="Open ' . $file . ' in a new window to parse it">' . $file . '</a>. File size: ' . number_format(filesize($file) / 1000000, 2, '.') . ' MB and File Date: ' . date("d F Y H:i", filemtime($file)). '</p>';
+        echo '<p>Log File: <a href="./file.php?path=' . $path . '&file=' . $file . '" target="_blank" title="Open ' . $file . ' in a new window to parse it">' . $file . '</a>. File size: ' . filesize($file) / 1000000 . ' MB and File Date: ' . date("d F Y H:i", filemtime($file)). '</p>';
     }
     echo '</div>';
 } else {
@@ -90,7 +90,7 @@ if (count($sorted_array) > 0) {
     $newest_file = key($sorted_array);
 
     echo '<p>Looking for the latest file in this directory...</p>';
-    echo '<p>Latest File is: ' . $newest_file . ' with a file size of ' . number_format(filesize($newest_file) / 1000000, 2, '.') . ' MB</p>';
+    echo '<p>Latest File is: ' . $newest_file . ' with a file size of ' . filesize($newest_file) / 1000000 . ' MB</p>';
 
     // Print the file name
     if (is_dir($newest_file)) {
