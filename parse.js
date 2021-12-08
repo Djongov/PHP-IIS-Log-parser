@@ -84,4 +84,6 @@ if (searchInputs) {
     }
 }
 
-document.getElementById("results").innerHTML = document.getElementsByTagName("tr").length - 1;
+if (document.getElementById("results")) {
+    document.getElementById("results").innerHTML = document.getElementsByTagName("tr").length - 1;
+}

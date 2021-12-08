@@ -33,7 +33,7 @@ if (isset($_GET['path'], $_GET['file'])) {
             $opened_file = fopen($file, "r");
             // Say that we are opening it
             echo '<p>Opening ' . $file . '</p>';
-            echo '<p>File size: ' . number_format(filesize($file) / 1000000, 2, '.') . ' MB</p>';
+            echo '<p>File size: ' . filesize($newest_file) / 1000000 . ' MB</p>';
             echo '<p>File date: ' . date("d F Y H:i", filemtime($file)). '</p>';
             // Inlcude the file with the functions that do the parsing and the html output
             include_once './functions.php';
