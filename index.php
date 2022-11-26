@@ -12,10 +12,12 @@
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['path'])) {
-
-        $path = filter_var($_POST['path'], FILTER_SANITIZE_STRING);
+        
+        // Decide whether to display only errors
+        $only_errors = (isset($_POST['only-errors']) and $_POST['only-errors'] === 'yes') ? true : false;
+        //$path = filter_var($_POST['path'], FILTER_SANITIZE_ENCODED);
         // Add the trailing slash in case it is forgotten
-        $path = rtrim($path, '\\') . '\\';
+        $path = rtrim($_POST['path'], '\\') . '\\';
             
         // Inlcude the file with the functions that do the parsing and the html output
         include_once './functions.php';
@@ -32,6 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dirs_array = array();
 
         if (is_dir($path)) {
+            if (!is_readable($path)) {
+                echo '<h3>Access Denied</h3><p>Directory not readable. Make sure that the user under which the web server is running has read access to the directory. In Windows, provide generic Users group with read access should work on home PCs</p><p><a href="/">Go back</a>';
+                return;
+            }
             $files_and_dirs = scandir($path);
             // Remove the dots from the result
             $files_and_dirs = array_diff($files_and_dirs, array('.', '..'));
@@ -69,8 +75,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             echo '<p>Log files in the directory:</p>';
             echo '<div style="width: 100%; word-break: break-word;">';
+            if ($only_errors) {
+                $only_errors_query = 'yes';
+            } else {
+                $only_errors_query = 'no';
+            }
             foreach ($sorted_array as $file) { 
-                echo '<p>Log File: <a href="./file.php?path=' . $path . '&file=' . $file . '" target="_blank" title="Open ' . $file . ' in a new window to parse it">' . $file . '</a>. File size: ' . filesize($file) / 1000000 . ' MB and File Date: ' . date("d F Y H:i", filemtime($file)). '</p>';
+                echo '<p>Log File: <a href="./file.php?path=' . $path . '&file=' . $file . '&only-errors=' . $only_errors_query . '" target="_blank" title="Open ' . $file . ' in a new window to parse it">' . $file . '</a>. File size: ' . filesize($file) / 1000000 . ' MB and File Date: ' . date("d F Y H:i", filemtime($file)). '</p>';
             }
             echo '</div>';
         } else {
@@ -120,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     echo '</details>';
                     // Call the functions
                     $parsed_log = parseInfoFromFile($opened_file, $correct_lines, $headers);
-                    echo buildTheLayout($parsed_log);
+                    echo buildTheLayout($parsed_log, $only_errors);
                 } else {
                     echo '<p>File ' . $newest_file . ' not with .log extension</p>';
                 }  
@@ -142,6 +153,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <label for="path">Provide a directory where the log file/s are located</label>
     <br />
     <input type="text" name="path" placeholder="Path to folder (not file)" />
+    <br />
+    <label for="path">Do you want to check only for errors?
+    <input type="checkbox" name="only-errors" value="yes" /></label>
+    <br />
     <input type="submit" value="Parse" />
 </form>
 <p>Directory path will be analyzed and the latest log file will be opened. If there are more than 1 log file in the directory, expand Log to get more details.</p>

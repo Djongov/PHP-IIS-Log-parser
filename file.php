@@ -15,8 +15,9 @@ $correct_lines = [];
 // This array will be used to get the table headers, essentially the log headers
 $headers = [];
 if (isset($_GET['path'], $_GET['file'])) {
-    $path = filter_var($_GET['path'], FILTER_SANITIZE_STRING);
-    $file = filter_var($_GET['file'], FILTER_SANITIZE_STRING);
+    $path = $_GET['path'];
+    $file = $_GET['file'];
+    $only_errors = (isset($_GET['only-errors'])) ? $_GET['only-errors'] : 'yes';
     echo $file;
     // Check if it's a proper file
     if (is_file($file)) {
@@ -33,13 +34,17 @@ if (isset($_GET['path'], $_GET['file'])) {
             $opened_file = fopen($file, "r");
             // Say that we are opening it
             echo '<p>Opening ' . $file . '</p>';
-            echo '<p>File size: ' . filesize($newest_file) / 1000000 . ' MB</p>';
+            echo '<p>File size: ' . filesize($file) / 1000000 . ' MB</p>';
             echo '<p>File date: ' . date("d F Y H:i", filemtime($file)). '</p>';
             // Inlcude the file with the functions that do the parsing and the html output
             include_once './functions.php';
             // Call the functions
             $parsed_log = parseInfoFromFile($opened_file, $correct_lines, $headers);
-            echo buildTheLayout($parsed_log);
+            if ($only_errors === 'yes') {
+                echo buildTheLayout($parsed_log, true);
+            } else {
+                echo buildTheLayout($parsed_log, false);
+            }
         } else {
             echo '<p>File ' . $opened_file . ' not with .log extension</p>';
         }  

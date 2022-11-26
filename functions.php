@@ -65,7 +65,7 @@ function parseInfoFromFile($file, $correct_lines, $headers) {
 }
 
 // This function will build the html with the parsed info
-function buildTheLayout($parsed_log) {
+function buildTheLayout($parsed_log, bool $only_errors) {
     $html = '';
     $html .= '<div class="wrapper">';
     // Let's experiment with the top uris
@@ -83,6 +83,8 @@ function buildTheLayout($parsed_log) {
     // Let's make a little summary of the request statuses
     // Look for the column sc-status
     $request_statuses = array_column($parsed_log[0], 'sc-status');
+    // Remove nulls (required in PHP 8+)
+    $request_statuses = array_filter($request_statuses);
     // Filter the array
     $request_statuses = array_filter($request_statuses,'strlen');
     // Count the values of the sc-statues
@@ -128,9 +130,11 @@ function buildTheLayout($parsed_log) {
     $html .= '</thead>';
     $html .= '<tbody>';
     // If you want to skip a statuses between 200 and 399, just display errors, filter the parsed log with this
-    foreach ($parsed_log[0] as $request_id=>$request_value) {
-        if ($parsed_log[0][$request_id]['sc-status'] >= 200 && $parsed_log[0][$request_id]['sc-status'] <= 399) {
-            unset($parsed_log[0][$request_id]);
+    if ($only_errors) {
+        foreach ($parsed_log[0] as $request_id=>$request_value) {
+            if ($parsed_log[0][$request_id]['sc-status'] >= 200 && $parsed_log[0][$request_id]['sc-status'] <= 399) {
+                unset($parsed_log[0][$request_id]);
+            }
         }
     }
     // Time for the table body with the requests, loop through the parsed_log array
