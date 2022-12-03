@@ -29,7 +29,7 @@ do {
     $filepath = $_FILES['file']['tmp_name'];
     $fileSize = filesize($filepath);
     $fileSize_in_KBs = $fileSize / 1000;
-    echo '<p>File size: ' . $fileSize_in_KBs . ' KB</p>';
+    echo '<p class="text-center">File size: ' . $fileSize_in_KBs . ' KB</p>';
     $fileinfo = finfo_open(FILEINFO_MIME_TYPE);
     $filetype = finfo_file($fileinfo, $filepath);
 

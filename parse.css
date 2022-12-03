@@ -1,55 +1,7 @@
-summary {
-    cursor: pointer;
-}
-tr:hover {
-    background: orange;
-}
-table.requests-table {
-    width: 100%;
-    border-collapse: collapse;
-    border-spacing: 0;
-    display: block;
-}
-table.requests-table th {
-    background: black;
-    text-align: left;
-    color: white;
-    font-size: 18px;
-    border-bottom: 1px solid black;
-    padding: 5px;
-}
-table.requests-table td {
-    padding: 5px;
-    border: 1px solid white;
-    color: black;
-    font-size: 10.5pt;
-}
-table.requests-table tr:focus {
-  background-color: orange;
-  outline: 0; /*remove outline*/
-}
-tr:nth-child(even) {
-    background-color: #E7E7E7;
-}
-div.wrapper {
-    margin: 0 auto;
-    text-align: center;
-    display: flex;
-    justify-content: center;
-}
-div.total-requests {
-    width: max-content;
-    margin: 10px;
-    border: 1px solid rgba(189, 162, 109, 1);
-    padding: 10px;
-    text-align: center;
-    display: inline-block;
-}
-@media only screen and (max-width: 600px) {
-  table.requests-table {
-        overflow-x: auto;
-  }
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 #scroll-to-top {
     position: fixed;
     bottom: 0;

@@ -5,7 +5,7 @@ const loader = document.getElementById('loader');
 const resultDiv = document.getElementById('result');
 
 
-['dragover', 'drop'].forEach(eventName => {
+['dragover', 'drop', 'submit'].forEach(eventName => {
     dropArea.addEventListener(eventName, (event) => {
     resultDiv.innerHTML = '';
     event.preventDefault();
@@ -13,11 +13,11 @@ const resultDiv = document.getElementById('result');
 }, false);
 
 ['dragenter', 'dragover'].forEach(eventName => {
-  dropArea.addEventListener(eventName, highlight, false)
+    dropArea.addEventListener(eventName, highlight, false)
 });
 
 ['dragleave', 'drop'].forEach(eventName => {
-  dropArea.addEventListener(eventName, unhighlight, false)
+    dropArea.addEventListener(eventName, unhighlight, false)
 });
 
 function highlight(e) {
@@ -30,7 +30,12 @@ function unhighlight(e) {
     dragText.classList.remove('text-green-500');
 }
 
-dropArea.addEventListener('drop', handleDrop, false)
+dropArea.addEventListener('drop', handleDrop, false);
+uploadForm.addEventListener('submit', uploadFileFromForm, false);
+
+function handleSubmit(e) {
+    uploadFileFromForm();
+}
 
 function handleDrop(e) {
   let dt = e.dataTransfer
@@ -44,7 +49,7 @@ function handleFiles(files) {
 }
 
 function uploadFile(file) {
-    if (file.size > 10000012) {
+    if (file.size > 12582912) {
         resultDiv.innerHTML = '<p class="text-center text-red-500 font-semibold">This exceeds the file limit of 10MB</p>';
         return;
     }
@@ -59,6 +64,34 @@ function uploadFile(file) {
     .then (text => {
         loader.classList.add('hidden');
         resultDiv.innerHTML = text;
+    })
+    .catch(() => { /* Error. Inform the user */ })
+}
+
+function uploadFileFromForm() {
+    let file = document.getElementById('fileElem').files[0];
+    if (file.size > 12582912) {
+        resultDiv.innerHTML = '<p class="text-center text-red-500 font-semibold">This exceeds the file limit of 12MB</p>';
+        return;
+    }
+    loader.classList.remove('hidden');
+    let formData = new FormData();
+    formData.append('file', file);
+    fetch('./process-logfile', {
+        method: 'POST',
+        body: formData
+    })
+    .then((response) => response.text())
+    .then (text => {
+        loader.classList.add('hidden');
+        resultDiv.innerHTML = text;
+        $(document).find(`#logs-table`).each(function() {
+            $(this).dynamitable()
+                .addFilter('.js-filter')
+                .addSorter('.js-sorter-asc', 'asc')
+                .addSorter('.js-sorter-desc', 'desc')
+            ;
+        });
     })
     .catch(() => { /* Error. Inform the user */ })
 }
