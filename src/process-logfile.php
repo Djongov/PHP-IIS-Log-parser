@@ -69,6 +69,8 @@ do {
     $opened_file = fopen($newFilepath, "r");
     $parsed_log = parseInfoFromFile($opened_file, $correct_lines, $headers);
     echo buildTheLayout($parsed_log, false);
+    include_once dirname($_SERVER['DOCUMENT_ROOT']) . '/functions/actionLog.php';
+    writeToLogFile('Successfully processed ' . $_FILES['file']['name']);
     fclose($opened_file);
     unlink($newFilepath);
     //return var_dump($_FILES);

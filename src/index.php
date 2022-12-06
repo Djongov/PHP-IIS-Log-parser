@@ -4,6 +4,7 @@ include_once dirname($_SERVER['DOCUMENT_ROOT']) . '/components/page/header.php';
 <div class="max-w-xl mx-auto" id="drop-area">
     <p class="my-4 text-center">.log files only</p>
     <p class="my-4 text-center">log file is immediately gone once uploaded</p>
+    <p class="my-4 text-center">Only shows http statuses > 400 (failed requests)</p>
     <p class="my-4 text-center">12 MB limit</p>
     <label
         class="flex justify-center w-full h-32 px-4 transition bg-gray-200 border-2 border-gray-300 dark:border-gray-400 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none dark:bg-gray-800">
