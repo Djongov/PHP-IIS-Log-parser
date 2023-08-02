@@ -22,7 +22,7 @@ include_once dirname($_SERVER['DOCUMENT_ROOT']) . '/components/page/header.php';
         <p class="text-center">Or</p>
         <div class="text-center mt-4">
             <form id="log-upload-form" enctype="multipart/form-data">
-                <input type="file" id="fileElem" name="file" />
+                <input type="file" id="fileElem" name="file" accept="text/log" />
                 <button type="submit" class="ml-2 bg-green-600 hover:bg-green-700 focus:ring-green-500 focus:ring-offset-green-200 text-white w-24 h-10 transition ease-in duration-200 text-center text-base font-semibold shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-lg">
                     Upload
                 </button>
