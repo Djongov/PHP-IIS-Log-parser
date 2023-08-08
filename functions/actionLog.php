@@ -9,4 +9,3 @@ function writeToLogFile($message) {
         file_put_contents($file, $write_to_log, FILE_APPEND | LOCK_EX);
     }
 }
-?>

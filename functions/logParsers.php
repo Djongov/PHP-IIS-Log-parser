@@ -137,7 +137,7 @@ function buildTheLayout($parsed_log, bool $only_errors) {
     $html .= '</thead>';
     $html .= '<tbody>';
     // If you want to skip a statuses between 200 and 399, just display errors, filter the parsed log with this
-    $only_errors = true;
+    $only_errors = false;
     if ($only_errors) {
         foreach ($parsed_log[0] as $request_id=>$request_value) {
             if ($parsed_log[0][$request_id]['sc-status'] >= 200 && $parsed_log[0][$request_id]['sc-status'] <= 399) {
@@ -183,4 +183,3 @@ function buildTheLayout($parsed_log, bool $only_errors) {
     $html .= '</div>';
 return $html;
 }
-?>

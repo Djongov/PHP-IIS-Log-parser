@@ -69,4 +69,3 @@ function buildHeadDescription($title, $keywords, $description, $thumbimage = '')
     $html .= '</head>' . PHP_EOL;
     return $html;
 }
-?>
