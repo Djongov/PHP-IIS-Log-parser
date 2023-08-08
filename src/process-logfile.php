@@ -29,7 +29,7 @@ do {
     $filepath = $_FILES['file']['tmp_name'];
     $fileSize = filesize($filepath);
     $fileSize_in_KBs = $fileSize / 1000;
-    echo '<p class="text-center">File size: ' . $fileSize_in_KBs . ' KB</p>';
+    //echo '<p class="text-center">File size: ' . $fileSize_in_KBs . ' KB</p>';
     $fileinfo = finfo_open(FILEINFO_MIME_TYPE);
     $filetype = finfo_file($fileinfo, $filepath);
 
@@ -68,11 +68,11 @@ do {
     $headers = [];
     $opened_file = fopen($newFilepath, "r");
     $parsed_log = parseInfoFromFile($opened_file, $correct_lines, $headers);
-    echo buildTheLayout($parsed_log, false);
+    header('Content-Type: application/json');
+    echo json_encode($parsed_log[0]);
     include_once dirname($_SERVER['DOCUMENT_ROOT']) . '/functions/actionLog.php';
     writeToLogFile('Successfully processed ' . $_FILES['file']['name']);
     fclose($opened_file);
     unlink($newFilepath);
     //return var_dump($_FILES);
 } while (0);
-?>

@@ -81,27 +81,56 @@ function uploadFileFromForm() {
         method: 'POST',
         body: formData
     })
-    .then((response) => response.text())
-    .then (text => {
-        loader.classList.add('hidden');
-        resultDiv.innerHTML = text;
-        $(document).ready(() => {
-            const table = drawDataGrid(`logs-table`);
-            buildDataGridFilters(table, `logs-table`, []);
-            // On every re-draw, rebuild them
-            table.on('draw', () => {
-                console.log(`redraw occured`);
-                buildDataGridFilters(table, `logs-table`, []);
-            });
+        .then(response => {
+            if (response.ok) {
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json(); // Response is JSON
+                } else {
+                    return response.text(); // Response is plain text
+                }
+            }
+            throw new Error('Network response was not ok.');
+        })
+        .then(data => {
+            if (typeof data === 'string') {
+                // Handle plain text response
+                resultDiv.innerHTML = data;
+            } else if (Array.isArray(data)) {
+                // Handle JSON response
+                resultDiv.innerHTML += `<table id="logs-table" class="w-full bg-gray-100 dark:bg-gray-900 buildtable mt-8 p-8 text-gray-700 dark:text-gray-400 border-collapse border border-slate-400 text-center">
+                <thead class="sticky top-0 dark:text-gray-400 border-collapse bg-gray-200 border border-slate-400">
+                    <tr id="filters">
+                    </tr>
+                </thead>
+            </table>`;
+                console.log('Fetched JSON:', data);
+                loader.classList.add('hidden');
+                const tableHeaders = Object.keys(data[0]).map(key => ({ title: key, data: key }));
+                const table = drawDataGrid(data, tableHeaders);
+                buildDataGridFilters(table, 'logs-table', []);
+
+                table.on('draw', () => {
+                    console.log('Redraw occurred');
+                    buildDataGridFilters(table, 'logs-table', []);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            console.error('Fetch error details:', error.message);
+            loader.classList.add('hidden');
+            resultDiv.innerHTML = `<p class="text-center text-red-500">${error.message}</p>`;
         });
-    })
-    .catch(() => { /* Error. Inform the user */ })
 }
 
-const drawDataGrid = (id) => {
+
+const drawDataGrid = (json, tableHeaders) => {
     const tableWrapper = $('<div style="max-height: 600px; overflow: auto;"></div>'); // Create a wrapper div for the table
-    const table = $(`#${id}`).DataTable({
+    const table = $('#logs-table').DataTable({
         ordering: false, // Need to make it work so it orders from the 1st row not the 2nd where the filters are
+        data: json,
+        columns: tableHeaders,
         /*
         scrollY: 600,
         scrollX: 600,
@@ -109,7 +138,7 @@ const drawDataGrid = (id) => {
         //scrollCollapse: false,
         paging: true,
         pagingType: 'full_numbers',
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        lengthMenu: [[25, 50, 100, -1], [25, 50, 100, "All"]],
         //stateSave: true,
         createdRow: function (row, data, dataIndex) {
             $(row).attr('tabindex', dataIndex)
@@ -122,23 +151,16 @@ const drawDataGrid = (id) => {
             }
         }],
         initComplete: function () {
-            $(`#${id}-loading-table`).remove();
-            document.getElementById(`${id}`).classList.remove('hidden');
+            //$(`#logs-table-loading-table`).remove();
         },
     });
-    $(`#${id}`).wrap(tableWrapper); // Wrap the table with the wrapper div
+    $(`#logs-table`).wrap(tableWrapper); // Wrap the table with the wrapper div
     return table;
 }
 
-const buildDataGridFilters = (table, tableId, columnSkipArray, extraColumns) => {
-    const isExtraColumns = extraColumns === "1"; // Convert string to boolean
-
+const buildDataGridFilters = (table, tableId, columnSkipArray) => {
     // Loop through each column of the DataTable
     table.columns().every(function (col) {
-        // Check if the current column should be skipped based on conditions
-        if ((isExtraColumns && (col === 0 || col === table.columns().indexes().length - 1)) || columnSkipArray.includes(col)) {
-            return;
-        }
         const column = table.column(this, { search: 'applied' }); // Get the DataTable column object
 
         // Create a select element and append it to the appropriate table header cell. (1) in this case is the 2nd thead so it doesn't do it on the first where the column names are
