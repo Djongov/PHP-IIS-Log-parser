@@ -6,11 +6,7 @@ module.exports = {
         './functions/**/*.php'
     ],
     theme: {
-        extend: {
-            colors: {
-                clifford: '#da373d',
-            }
-        }
+        extend: {}
     },
     plugins: [],
     darkMode: 'class',

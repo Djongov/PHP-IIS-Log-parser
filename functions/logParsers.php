@@ -54,14 +54,49 @@ function parseInfoFromFile($file, $correct_lines, $headers) {
         $count = -1;
         foreach ($log_columns as $column) {
             $count++;
-            $line[$column] = $split_rows[$count] ?? null;      
+            $line[$column] = $split_rows[$count] ?? null;
         }
         // Push it to the new array
         array_push($parsed_log, $line);
     }
-    return [$parsed_log, $log_columns];
+    // Now the count data for charts
+    $countsArray = [];
+    // Total requests
+    $countsArray['totalRequests'] = count($parsed_log);
+    $countsArray['Counts'] = [];
+    // Top 5 Uris
+    $countsArray['Counts']['top5uris'] = calculateTop5Uris(($parsed_log));
+    // Status Codes
+    $countsArray['Counts']['statusCodes'] = calculateStatusCodes($parsed_log);
+    return [$parsed_log, $countsArray];
     // Close the file
     fclose($file);
+}
+
+function calculateTop5Uris($parsed_log) {
+    $urisArray = array_column($parsed_log, 'cs-uri-stem');
+    $urisArray = array_replace($urisArray, array_fill_keys(array_keys($urisArray, null), ''));
+    $urisSortedArray = array_count_values($urisArray);
+    arsort($urisSortedArray);
+    return array_slice($urisSortedArray, 0, 5);
+}
+
+function calculateStatusCodes($parsed_log) {
+    // Look for the column sc-status
+    $request_statuses = array_column($parsed_log, 'sc-status');
+    // Remove nulls (required in PHP 8+)
+    $request_statuses = array_filter($request_statuses);
+    // Filter the array
+    $request_statuses = array_filter($request_statuses, 'strlen');
+    // Count the values of the sc-statues
+    $request_statuses = array_count_values($request_statuses);
+    // Save the keys to this variable
+    $keys = array_keys($request_statuses);
+    // Sort the array so from highest values down
+    array_multisort($request_statuses, SORT_DESC, SORT_NUMERIC, $keys);
+    // combine the the arrays
+    $request_statuses = array_combine($keys, $request_statuses);
+    return $request_statuses;
 }
 
 // This function will build the html with the parsed info

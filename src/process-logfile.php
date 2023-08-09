@@ -11,7 +11,7 @@ do {
     }
 
     if (empty($_FILES) or !isset($_FILES['file'])) {
-        echo '<p class="' . $error_class . '">File exceeds the upload limit of 10MB!</p>';
+        echo '<p class="' . $error_class . '">File exceeds the upload limit of 12MB!</p>';
         break 1;
     }
     
@@ -36,7 +36,7 @@ do {
     if ($fileSize === 0) {
         die("The file is empty.");
     }
-
+    
     if ($fileSize > 12582912) { // 12 MB (1 byte * 1024 * 1024 * 12 (for 12 MB))
         die("The file is too large");
     }
@@ -69,7 +69,7 @@ do {
     $opened_file = fopen($newFilepath, "r");
     $parsed_log = parseInfoFromFile($opened_file, $correct_lines, $headers);
     header('Content-Type: application/json');
-    echo json_encode($parsed_log[0]);
+    echo json_encode($parsed_log);
     include_once dirname($_SERVER['DOCUMENT_ROOT']) . '/functions/actionLog.php';
     writeToLogFile('Successfully processed ' . $_FILES['file']['name']);
     fclose($opened_file);

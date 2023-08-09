@@ -3,6 +3,7 @@ const dragText = document.getElementById('drag-text');
 const uploadForm = document.getElementById('log-upload-form');
 const loader = document.getElementById('loader');
 const resultDiv = document.getElementById('result');
+const chartsContainer = document.getElementById('chart-container');
 
 
 ['dragover', 'drop', 'submit'].forEach(eventName => {
@@ -45,14 +46,16 @@ function handleDrop(e) {
 }
 
 function handleFiles(files) {
-  ([...files]).forEach(uploadFile)
+    ([...files]).forEach(uploadFile)
 }
 
 function uploadFile(file) {
+    
     if (file.size > 12582912) {
         resultDiv.innerHTML = '<p class="text-center text-red-500 font-semibold">This exceeds the file limit of 12MB</p>';
         return;
     }
+    
     loader.classList.remove('hidden');
     let formData = new FormData(uploadForm);
     formData.append('file', file);
@@ -60,20 +63,83 @@ function uploadFile(file) {
         method: 'POST',
         body: formData
     })
-    .then((response) => response.text())
-    .then (text => {
-        loader.classList.add('hidden');
-        resultDiv.innerHTML = text;
+    .then(response => {
+        if (response.ok) {
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json(); // Response is JSON
+            } else {
+                return response.text(); // Response is plain text
+            }
+        }
+        throw new Error('Network response was not ok.');
     })
-    .catch(() => { /* Error. Inform the user */ })
+    .then(data => {
+        if (typeof data === 'string') {
+            // Handle plain text response
+            resultDiv.innerHTML = data;
+        } else if (Array.isArray(data)) {
+            // Handle JSON response
+            // Charts
+            const countsArray = Object.entries(data[1].Counts);
+            // Loop through the array to build charts
+            countsArray.forEach(([name, array]) => {
+                // Draw only if there is anything inside the sub-array
+                if (Object.entries(array).length > 0) {
+                    // Initiate temporary arrays
+                    let labelArray = [];
+                    let dataArray = [];
+                    // Loop through the Counts sub array
+                    Object.entries(array).map(([Name, Count]) => {
+                        // Push name to label array and count to data array
+                        labelArray.push(Name);
+                        dataArray.push(Count);
+                    });
+                    // Draw the chart and add it to the reports holder div
+                    try {
+                        createPieChart(name, labelArray, dataArray);
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
+            })
+            resultDiv.innerHTML += `<p class="my-6 text-xl font-semibold text-center">Total Requests: ${data[1].totalRequests}</p>`;
+            resultDiv.innerHTML += `<table id="logs-table" class="w-full bg-gray-100 dark:bg-gray-900 buildtable mt-8 p-8 text-gray-700 dark:text-gray-400 border-collapse border border-slate-400 text-center">
+        <thead class="sticky top-0 dark:text-gray-400 border-collapse bg-gray-200 border border-slate-400">
+            <tr id="filters">
+            </tr>
+        </thead>
+    </table>`;
+            console.log('Fetched JSON:', data);
+            loader.classList.add('hidden');
+            const table = drawDataGrid(data[0]);
+            buildDataGridFilters(table, 'logs-table', []);
+
+            table.on('draw', () => {
+                console.log('Redraw occurred');
+                buildDataGridFilters(table, 'logs-table', []);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        console.error('Fetch error details:', error.message);
+        loader.classList.add('hidden');
+        resultDiv.innerHTML = `<p class="text-center text-red-500">${error.message}</p>`;
+    });
 }
 
 function uploadFileFromForm() {
+    // Clear the divs so existing data is not shown along with the new
+    resultDiv.innerHTML = '';
+    chartsContainer.innerHTML = '';
     let file = document.getElementById('fileElem').files[0];
+    
     if (file.size > 12582912) {
         resultDiv.innerHTML = '<p class="text-center text-red-500 font-semibold">This exceeds the file limit of 12MB</p>';
         return;
     }
+    
     loader.classList.remove('hidden');
     let formData = new FormData();
     formData.append('file', file);
@@ -81,52 +147,75 @@ function uploadFileFromForm() {
         method: 'POST',
         body: formData
     })
-        .then(response => {
-            if (response.ok) {
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    return response.json(); // Response is JSON
-                } else {
-                    return response.text(); // Response is plain text
+    .then(response => {
+        if (response.ok) {
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json(); // Response is JSON
+            } else {
+                return response.text(); // Response is plain text
+            }
+        }
+        throw new Error('Network response was not ok.');
+    })
+    .then(data => {
+        if (typeof data === 'string') {
+            // Handle plain text response
+            resultDiv.innerHTML = data;
+        } else if (Array.isArray(data)) {
+            // Handle JSON response
+            // Charts
+            const countsArray = Object.entries(data[1].Counts);
+            // Loop through the array to build charts
+            countsArray.forEach(([name, array]) => {
+                // Draw only if there is anything inside the sub-array
+                if (Object.entries(array).length > 0) {
+                    // Initiate temporary arrays
+                    let labelArray = [];
+                    let dataArray = [];
+                    // Loop through the Counts sub array
+                    Object.entries(array).map(([Name, Count]) => {
+                        // Push name to label array and count to data array
+                        labelArray.push(Name);
+                        dataArray.push(Count);
+                    });
+                    // Draw the chart and add it to the reports holder div
+                    try {
+                        createPieChart(name, labelArray, dataArray);
+                    } catch (error) {
+                        console.log(error);
+                    }
                 }
-            }
-            throw new Error('Network response was not ok.');
-        })
-        .then(data => {
-            if (typeof data === 'string') {
-                // Handle plain text response
-                resultDiv.innerHTML = data;
-            } else if (Array.isArray(data)) {
-                // Handle JSON response
-                resultDiv.innerHTML += `<table id="logs-table" class="w-full bg-gray-100 dark:bg-gray-900 buildtable mt-8 p-8 text-gray-700 dark:text-gray-400 border-collapse border border-slate-400 text-center">
-                <thead class="sticky top-0 dark:text-gray-400 border-collapse bg-gray-200 border border-slate-400">
-                    <tr id="filters">
-                    </tr>
-                </thead>
-            </table>`;
-                console.log('Fetched JSON:', data);
-                loader.classList.add('hidden');
-                const tableHeaders = Object.keys(data[0]).map(key => ({ title: key, data: key }));
-                const table = drawDataGrid(data, tableHeaders);
-                buildDataGridFilters(table, 'logs-table', []);
-
-                table.on('draw', () => {
-                    console.log('Redraw occurred');
-                    buildDataGridFilters(table, 'logs-table', []);
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Fetch error:', error);
-            console.error('Fetch error details:', error.message);
+            })
+            resultDiv.innerHTML += `<p class="my-6 text-xl font-semibold text-center">Total Requests: ${data[1].totalRequests}</p>`;
+            resultDiv.innerHTML += `<table id="logs-table" class="w-full bg-gray-100 dark:bg-gray-900 buildtable mt-8 p-8 text-gray-700 dark:text-gray-400 border-collapse border border-slate-400 text-center">
+            <thead class="sticky top-0 dark:text-gray-400 border-collapse bg-gray-200 border border-slate-400">
+                <tr id="filters">
+                </tr>
+            </thead>
+        </table>`;
+            console.log('Fetched JSON:', data);
             loader.classList.add('hidden');
-            resultDiv.innerHTML = `<p class="text-center text-red-500">${error.message}</p>`;
-        });
+            const table = drawDataGrid(data[0]);
+            buildDataGridFilters(table, 'logs-table', []);
+
+            table.on('draw', () => {
+                console.log('Redraw occurred');
+                buildDataGridFilters(table, 'logs-table', []);
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        console.error('Fetch error details:', error.message);
+        loader.classList.add('hidden');
+        resultDiv.innerHTML = `<p class="text-center text-red-500">${error.message}</p>`;
+    });
 }
 
-
-const drawDataGrid = (json, tableHeaders) => {
+const drawDataGrid = (json) => {
     const tableWrapper = $('<div style="max-height: 600px; overflow: auto;"></div>'); // Create a wrapper div for the table
+    const tableHeaders = Object.keys(json[0]).map(key => ({ title: key, data: key }));
     const table = $('#logs-table').DataTable({
         ordering: false, // Need to make it work so it orders from the 1st row not the 2nd where the filters are
         data: json,
@@ -203,3 +292,78 @@ const buildDataGridFilters = (table, tableId, columnSkipArray) => {
 
     });
 };
+
+
+const createPieChart = (name, labels, data) => {
+    // Create a parent div for the chart
+    let chartContainer = document.createElement('div');
+    chartContainer.style.width = '300px';
+    chartContainer.style.height = '300px';
+    // Place it inside the chart-container div
+    chartsContainer.appendChild(chartContainer);
+    // Create the canvas for the chart
+    let canvas = document.createElement('canvas');
+    // Give it id (optional)
+    canvas.id = `${name}-chart`;
+    // Important to size it
+    canvas.style.width = '300px';
+    canvas.style.height = '300px';
+    // Place it inside the chart container
+    chartContainer.appendChild(canvas);
+
+    // Now let's deal with the colors
+    let backgroundColorArray = [];
+
+    let colorScheme = [];
+    labels.forEach(label => {
+        var item = colorScheme[Math.floor(Math.random() * colorScheme.length)];
+        // For status codes let's do it slightly different. Good status codes - green, redirects - yellow, client errors - orange and server errors - red
+        if (name === 'statusCodes') {
+            let color = '';
+            if (label === "0") {
+                color = 'gray';
+            } else if (label > 0 && label < 299) {
+                color = 'green';
+            } else if (label >= 300 && label < 399) {
+                color = 'yellow';
+            } else if (label >= 400 && label < 499) {
+                color = 'orange';
+            } else if (label >= 500 && label <= 1000) {
+                color = 'red';
+            } else {
+                color = 'purple';
+            }
+            backgroundColorArray.push(color);
+        // For the rest - push from the this array of colors
+        } else {
+            backgroundColorArray = [
+                'rgba(54, 162, 235, 1)', // blue
+                'rgba(75, 192, 192, 1)', // green
+                'rgba(255, 99, 132, 1)', // red
+                'rgba(255, 159, 64, 1)', // orange
+                'rgba(153, 102, 255, 1)', // purple
+                'rgba(255, 206, 86, 1)', // yellow
+                'rgba(255, 0, 0, 1)', // bright red
+                'rgba(0, 255, 255, 1)', // cyan
+                'rgba(255, 0, 255, 1)', // magenta
+                'rgba(128, 128, 128, 1)' // grey
+            ];
+
+        }
+        //console.log('Assigning color ' + item + ' to chart ' + name);
+        colorScheme = colorScheme.filter(element => element !== item);
+    })
+    
+    // Create the pie chart
+    const ctx = canvas.getContext('2d');
+    const myPieChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: backgroundColorArray
+            }]
+        }
+    });
+}
