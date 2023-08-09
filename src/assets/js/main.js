@@ -216,43 +216,57 @@ function uploadFileFromForm() {
 const drawDataGrid = (json) => {
     const tableWrapper = $('<div style="max-height: 600px; overflow: auto;"></div>'); // Create a wrapper div for the table
     const tableHeaders = Object.keys(json[0]).map(key => ({ title: key, data: key }));
+    const scStatusColumnIndex = tableHeaders.findIndex(header => header.title === 'sc-status'); // Find the index of the 'sc-status' column
+
     const table = $('#logs-table').DataTable({
-        ordering: false, // Need to make it work so it orders from the 1st row not the 2nd where the filters are
+        ordering: false,
         data: json,
         columns: tableHeaders,
-        /*
-        scrollY: 600,
-        scrollX: 600,
-        */
-        //scrollCollapse: false,
         paging: true,
         pagingType: 'full_numbers',
         lengthMenu: [[25, 50, 100, -1], [25, 50, 100, "All"]],
-        //stateSave: true,
         createdRow: function (row, data, dataIndex) {
-            $(row).attr('tabindex', dataIndex)
+            $(row).attr('tabindex', dataIndex);
             $(row).addClass('focus:outline-none focus:bg-gray-300 focus:text-gray-900 dark:focus:bg-gray-700 dark:focus:text-amber-500');
         },
         columnDefs: [
             {
                 targets: '_all',
+                className: 'py-4 px-6 border border-slate-400 max-w-md break-words', // Apply class to all cells
+            },
+            {
+                targets: scStatusColumnIndex, // Use the index of 'sc-status' column
                 createdCell: function (td, cellData, rowData, row, col) {
-                    $(td).addClass('py-4 px-6 border border-slate-400 max-w-md break-words');
+                    const scStatusValue = parseInt(cellData);
+
+                    if (!isNaN(scStatusValue)) {
+                        if (scStatusValue >= 0 && scStatusValue <= 100) {
+                            $(td).addClass('bg-gray-300');
+                        } else if (scStatusValue >= 101 && scStatusValue <= 299) {
+                            $(td).addClass('bg-green-500');
+                        } else if (scStatusValue >= 300 && scStatusValue <= 399) {
+                            $(td).addClass('bg-yellow-500');
+                        } else if (scStatusValue >= 400 && scStatusValue <= 499) {
+                            $(td).addClass('bg-orange-500');
+                        } else if (scStatusValue >= 500 && scStatusValue <= 1000) {
+                            $(td).addClass('bg-red-500');
+                        }
+                    }
                 }
             }
         ],
         headerCallback: function (thead, data, start, end, display) {
-            $('th', thead).removeClass('sorting_asc sorting_desc sorting sorting_disabled');
-            $('th', thead).addClass('max-w-lg'); // Add your custom class to the <th> elements
+            $('th', thead).removeClass('sorting_asc sorting_desc sorting');
+            $('th', thead).addClass('your-custom-thead-class'); // Add your custom class to the <th> elements
         },
         initComplete: function () {
             //$(`#logs-table-loading-table`).remove();
         },
     });
+
     $(`#logs-table`).wrap(tableWrapper); // Wrap the table with the wrapper div
     return table;
-}
-
+};
 const buildDataGridFilters = (table, tableId, columnSkipArray) => {
     // Loop through each column of the DataTable
     table.columns().every(function (col) {
@@ -277,8 +291,8 @@ const buildDataGridFilters = (table, tableId, columnSkipArray) => {
             if (d !== null) {
                 // Truncate long select fields and add a title for hover
                 let optionText = d;
-                if (optionText.length > 90) {
-                    optionText = optionText.substring(0, 90) + '...';
+                if (optionText.length > 40) {
+                    optionText = optionText.substring(0, 40) + '...';
                     // For truncated options, have a title that has the full value so it can be visible
                     select.append(`<option value="${d}" title="${d}">${optionText}</option>`);
                 } else {
