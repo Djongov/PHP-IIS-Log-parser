@@ -1,7 +1,7 @@
 <?php
 // This function will parse the log file
 function parseInfoFromFile($file, $correct_lines, $headers) {
-        if ($file) {
+    if ($file) {
         while (($line = fgets($file)) !== false) {
             // remove everything starting with #, therefore only real requests
             if (substr($line, 0, 1) !== "#") {
@@ -17,14 +17,14 @@ function parseInfoFromFile($file, $correct_lines, $headers) {
                 // loop through the first array with all the #
                 foreach ($headers as $value) {
                     // Search for "Field" in the array
-                    if (strpos($value, 'Field') !== false) { 
+                    if (strpos($value, 'Field') !== false) {
                         // save whatever found in the new results array
                         $results[] = $value;
                         // and stop the loop
                         break;
                     }
                 }
-                if (empty($results)) { 
+                if (empty($results)) {
                     continue;
                 } else {
                     // convert to string and save it to a new variable
@@ -48,16 +48,20 @@ function parseInfoFromFile($file, $correct_lines, $headers) {
     $parsed_log = array();
     // loop throug the parsed requests array
     foreach ($correct_lines as $row) {
-        // Do the whole magic with assigning the values to the new array
-        $split_rows = explode(" ", $row);
-        $line = array();
-        $count = -1;
-        foreach ($log_columns as $column) {
-            $count++;
-            $line[$column] = $split_rows[$count] ?? null;
+        $row = trim($row); // Remove leading/trailing whitespace including newline characters
+        if (!empty($row)) {
+            // Do the rest of the processing as before
+            $split_rows = explode(" ", $row);
+            $line = array();
+            $count = -1;
+            foreach ($log_columns as $column) {
+                $column = trim($column);
+                $count++;
+                $line[$column] = $split_rows[$count] ?? null;
+            }
+            // Push it to the new array
+            array_push($parsed_log, $line);
         }
-        // Push it to the new array
-        array_push($parsed_log, $line);
     }
     // Now the count data for charts
     $countsArray = [];
@@ -65,41 +69,50 @@ function parseInfoFromFile($file, $correct_lines, $headers) {
     $countsArray['totalRequests'] = count($parsed_log);
     $countsArray['Counts'] = [];
     // Top 5 Uris
-    $countsArray['Counts']['top5uris'] = calculateTop5Uris(($parsed_log));
+    $countsArray['Counts']['top5uris'] = calculateCounts($parsed_log, 'cs-uri-stem');
     // Status Codes
     $countsArray['Counts']['statusCodes'] = calculateStatusCodes($parsed_log);
+    // Client IPs
+    $column = 'c-ip'; // Default column
+    foreach ($parsed_log as $entry) {
+        if (array_key_exists('CF-Connecting-IP', $entry)) {
+            $column = 'CF-Connecting-IP';
+            break; // No need to continue checking if we found the key
+        }
+    }
+
+    $countsArray['Counts'][$column] = calculateCounts($parsed_log, $column);
+
     return [$parsed_log, $countsArray];
-    // Close the file
-    fclose($file);
 }
 
-function calculateTop5Uris($parsed_log) {
-    $urisArray = array_column($parsed_log, 'cs-uri-stem');
-    $urisArray = array_replace($urisArray, array_fill_keys(array_keys($urisArray, null), ''));
-    $urisSortedArray = array_count_values($urisArray);
+function calculateCounts($array, $column) {
+    $array = array_column($array, $column);
+    $array = array_replace($array, array_fill_keys(array_keys($array, null), ''));
+    $urisSortedArray = array_count_values($array);
     arsort($urisSortedArray);
     return array_slice($urisSortedArray, 0, 5);
 }
 
-function calculateStatusCodes($parsed_log) {
+function calculateStatusCodes($array) {
     // Look for the column sc-status
-    $request_statuses = array_column($parsed_log, 'sc-status');
+     $requestStatusCodes = array_column($array, 'sc-status');
     // Remove nulls (required in PHP 8+)
-    $request_statuses = array_filter($request_statuses);
+     $requestStatusCodes = array_filter( $requestStatusCodes);
     // Filter the array
-    $request_statuses = array_filter($request_statuses, 'strlen');
+     $requestStatusCodes = array_filter( $requestStatusCodes, 'strlen');
     // Count the values of the sc-statues
-    $request_statuses = array_count_values($request_statuses);
+     $requestStatusCodes = array_count_values( $requestStatusCodes);
     // Save the keys to this variable
-    $keys = array_keys($request_statuses);
+    $keys = array_keys( $requestStatusCodes);
     // Sort the array so from highest values down
-    array_multisort($request_statuses, SORT_DESC, SORT_NUMERIC, $keys);
+    array_multisort( $requestStatusCodes, SORT_DESC, SORT_NUMERIC, $keys);
     // combine the the arrays
-    $request_statuses = array_combine($keys, $request_statuses);
-    return $request_statuses;
+     $requestStatusCodes = array_combine($keys,  $requestStatusCodes);
+    return  $requestStatusCodes;
 }
 
-// This function will build the html with the parsed info
+// No longer used
 function buildTheLayout($parsed_log, bool $only_errors) {
     $html = '';
     $html .= '<p><a id="scroll-to-top" href="#">Scroll to Top</a></p>';
@@ -120,26 +133,26 @@ function buildTheLayout($parsed_log, bool $only_errors) {
         $html .= '</div>';
         // Let's make a little summary of the request statuses
         // Look for the column sc-status
-        $request_statuses = array_column($parsed_log[0], 'sc-status');
+         $requestStatusCodes = array_column($parsed_log[0], 'sc-status');
         // Remove nulls (required in PHP 8+)
-        $request_statuses = array_filter($request_statuses);
+         $requestStatusCodes = array_filter( $requestStatusCodes);
         // Filter the array
-        $request_statuses = array_filter($request_statuses,'strlen');
+         $requestStatusCodes = array_filter( $requestStatusCodes,'strlen');
         // Count the values of the sc-statues
-        $request_statuses = array_count_values($request_statuses);
+         $requestStatusCodes = array_count_values( $requestStatusCodes);
         // Save the keys to this variable
-        $keys = array_keys($request_statuses);
+        $keys = array_keys( $requestStatusCodes);
         // Sort the array so from highest values down
-        array_multisort($request_statuses, SORT_DESC, SORT_NUMERIC, $keys);
+        array_multisort( $requestStatusCodes, SORT_DESC, SORT_NUMERIC, $keys);
         // combine the the arrays
-        $request_statuses = array_combine($keys, $request_statuses);
+         $requestStatusCodes = array_combine($keys,  $requestStatusCodes);
         // Build the div
         $html .= '<div class="border border-black dark:border-slate-300 p-4 text-black dark:text-gray-400 text-center">';
             // Show total count
             $total_requests = count($parsed_log[0]);
             $html .= '<p><strong>Total Requests: ' . $total_requests . '</strong></p>';
             // Loop through the combined log
-            foreach ($request_statuses as $status=>$count) {
+            foreach ( $requestStatusCodes as $status=>$count) {
                 // Play with the backgrounds for certain status codes
                 $background = 'transparent';
                 $color = 'black';

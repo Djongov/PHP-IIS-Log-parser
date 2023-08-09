@@ -233,12 +233,18 @@ const drawDataGrid = (json) => {
             $(row).attr('tabindex', dataIndex)
             $(row).addClass('focus:outline-none focus:bg-gray-300 focus:text-gray-900 dark:focus:bg-gray-700 dark:focus:text-amber-500');
         },
-        "columnDefs": [{
-            "targets": "_all",
-            "createdCell": function (td, cellData, rowData, row, col) {
-                $(td).addClass('py-4 px-6 border border-slate-400 max-w-md break-words');
+        columnDefs: [
+            {
+                targets: '_all',
+                createdCell: function (td, cellData, rowData, row, col) {
+                    $(td).addClass('py-4 px-6 border border-slate-400 max-w-md break-words');
+                }
             }
-        }],
+        ],
+        headerCallback: function (thead, data, start, end, display) {
+            $('th', thead).removeClass('sorting_asc sorting_desc sorting sorting_disabled');
+            $('th', thead).addClass('max-w-lg'); // Add your custom class to the <th> elements
+        },
         initComplete: function () {
             //$(`#logs-table-loading-table`).remove();
         },
@@ -364,6 +370,16 @@ const createPieChart = (name, labels, data) => {
                 data: data,
                 backgroundColor: backgroundColorArray
             }]
+        },
+        options: {
+            plugins: {
+                title: {
+                    display: true,
+                    text: `${name}`,
+                    fontSize: 24,
+                    fontColor: '#333'
+                }
+            }
         }
     });
 }
