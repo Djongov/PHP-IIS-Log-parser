@@ -149,6 +149,7 @@ function uploadFileFromForm() {
     })
     .then(response => {
         if (response.ok) {
+            resultDiv.innerHTML += `<div id="loading-screen" class="fixed inset-0 flex items-center justify-center"><div class="bg-green-500 p-8 shadow-md text-white border border-black dark:border-white"><p class="text-center">Loading Data...</p><p class="text-center">Please wait</p></div></div>`;
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 return response.json(); // Response is JSON
@@ -192,13 +193,13 @@ function uploadFileFromForm() {
             <thead class="sticky top-0 dark:text-gray-400 border-collapse bg-gray-200 border border-slate-400">
             </thead>
         </table>`;
-            console.log('Fetched JSON:', data);
+            //console.log('Fetched JSON:', data);
             loader.classList.add('hidden');
             const table = drawDataGrid(data[0]);
             buildDataGridFilters(table, 'logs-table', []);
 
             table.on('draw', () => {
-                console.log('Redraw occurred');
+                //console.log('Redraw occurred');
                 buildDataGridFilters(table, 'logs-table', []);
             });
         }
@@ -257,7 +258,7 @@ const drawDataGrid = (json) => {
             }
         ],
         initComplete: function () {
-            //$(`#logs-table-loading-table`).remove();
+            document.getElementById('loading-screen').remove();
         },
     });
 
