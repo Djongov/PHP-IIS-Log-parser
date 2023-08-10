@@ -149,7 +149,7 @@ function uploadFileFromForm() {
     })
     .then(response => {
         if (response.ok) {
-            resultDiv.innerHTML += `<div id="loading-screen" class="fixed inset-0 flex items-center justify-center"><div class="bg-green-500 p-8 shadow-md text-white border border-black dark:border-white"><p class="text-center">Loading Data...</p><p class="text-center">Please wait</p></div></div>`;
+            resultDiv.innerHTML += `<div id="loading-screen" class="fixed inset-0 flex items-center justify-center"><div class="w-80 bg-green-500 p-2 rounded-md shadow-md shadow-gray-500 text-white border border-black dark:border-white"><p class="text-center">Loading Data...</p><p class="text-center">Please wait</p></div></div>`;
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 return response.json(); // Response is JSON
@@ -232,10 +232,6 @@ const drawDataGrid = (json) => {
         },
         columnDefs: [
             {
-                targets: '_all',
-                className: 'py-1 px-2 border border-slate-400 max-w-md break-words', // Apply class to all cells
-            },
-            {
                 targets: scStatusColumnIndex, // Use the index of 'sc-status' column
                 createdCell: function (td, cellData, rowData, row, col) {
                     const scStatusValue = parseInt(cellData);
@@ -252,6 +248,18 @@ const drawDataGrid = (json) => {
                         } else if (scStatusValue >= 500 && scStatusValue <= 1000) {
                             $(td).addClass('bg-red-500');
                         }
+                    }
+                },
+                className: 'py-1 px-2 border border-slate-400 max-w-md break-words', // Apply class to all cells
+            },
+            {
+                targets: '_all',
+                createdCell: function (td, cellData, rowData, row, col) {
+                    const truncationLength = 200;
+                    if (cellData.length > truncationLength) {
+                        $(td).addClass('truncate');
+                        $(td).attr('title', cellData);
+                        $(td).text(cellData.substring(0, truncationLength) + '...');
                     }
                 },
                 className: 'py-1 px-2 border border-slate-400 max-w-md break-words', // Apply class to all cells
@@ -273,7 +281,7 @@ const drawDataGrid = (json) => {
 };
 
 
-const buildDataGridFilters = (table, tableId, columnSkipArray) => {
+const buildDataGridFilters = (table, tableId) => {
     const filtersRow = $(`#${tableId} thead tr:eq(1)`); // Get the second row in the thead
 
     // Clear existing filters by emptying the filter cells
@@ -287,7 +295,7 @@ const buildDataGridFilters = (table, tableId, columnSkipArray) => {
         filterCell.html(''); // Clear existing content
 
         // Create a select element and set it as the HTML content of the table header cell
-        const select = $('<select class="text-center m-1 p-1 text-sm text-gray-900 border border-gray-300 rounded bg-gray-50 focus:ring-gray-500 focus:border-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"><option value="">No filter</option></select>')
+        const select = $('<select class="w-full text-center m-1 p-1 text-sm text-gray-900 border border-gray-300 rounded bg-gray-50 focus:ring-gray-500 focus:border-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"><option value="">No filter</option></select>')
             .appendTo(filterCell)
             .on('change', function () {
                 const val = $.fn.dataTable.util.escapeRegex(
@@ -300,18 +308,22 @@ const buildDataGridFilters = (table, tableId, columnSkipArray) => {
                     .draw();
             });
 
+        // Calculate the maximum width for the select options
+        const maxOptionWidth = Math.min(
+            $(column.header()).outerWidth() || select.width(),
+            150
+        ); // You can adjust the maximum width as needed
+
         // Iterate through the unique values in the column, create options for the select element
         column.data().unique().sort().each(function (d, j) {
             if (d !== null) {
                 // Truncate long select fields and add a title for hover
                 let optionText = d;
-                if (optionText.length > 40) {
-                    optionText = optionText.substring(0, 40) + '...';
-                    // For truncated options, have a title that has the full value so it can be visible
-                    select.append(`<option value="${d}" title="${d}">${optionText}</option>`);
-                } else {
-                    select.append(`<option value="${d}">${optionText}</option>`);
+                if (optionText.length > maxOptionWidth / 2) {
+                    optionText = optionText.substring(0, maxOptionWidth / 2) + '...';
                 }
+                // Append the option with the selected attribute if necessary
+                select.append(`<option value="${d}" title="${d}">${optionText}</option>`);
             }
         });
 
@@ -319,7 +331,19 @@ const buildDataGridFilters = (table, tableId, columnSkipArray) => {
         const currSearch = column.search();
         if (currSearch) {
             const searchValue = currSearch.substring(1, currSearch.length - 1);
-            select.val(searchValue);
+            select.val(searchValue); // Set the selected value
+
+            // Loop through the options and set the 'selected' attribute explicitly for the matched option
+            select.find('option').each(function () {
+                const optionValue = $(this).val();
+                // We need to replace the special characters from searchValue as searchValue comes with escaped special characters from column.search(). We want to apply the selected prop for the currently selected option so it's visible what has been filtered right now
+                if (optionValue === searchValue.replace(/\\/g, '')) {
+                    $(this).prop('selected', true);
+                } else {
+                    $(this).prop('selected', false);
+                }
+            });
+
             select.addClass('border-red-500');
             select.addClass('dark:border-red-500');
         }
