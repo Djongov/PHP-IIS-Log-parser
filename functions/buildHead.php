@@ -63,8 +63,8 @@ function buildHeadDescription($title, $keywords, $description, $thumbimage = '')
     $html .= '<meta property="twitter:image:alt" content="' . $title . '" />' . PHP_EOL;
     $html .= '<!-- Stylesheets -->' . PHP_EOL;
     //$html .= '<link rel="stylesheet" href="/assets/css/main.css" type="text/css" />' . PHP_EOL;
-    $html .= '<script src="https://cdn.tailwindcss.com"></script>' . PHP_EOL;
     $html .= '<!-- Scripts -->' . PHP_EOL;
+    $html .= '<script src="https://cdn.tailwindcss.com"></script>' . PHP_EOL;
     $html .= '<script src="/assets/js/main.js" defer></script>';
     $html .= '<script src="/assets/js/theme-switcher.js" defer></script>';
     $html .= '</head>' . PHP_EOL;

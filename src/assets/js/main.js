@@ -190,8 +190,6 @@ function uploadFileFromForm() {
             resultDiv.innerHTML += `<p class="my-6 text-xl font-semibold text-center">Total Requests: ${data[1].totalRequests}</p>`;
             resultDiv.innerHTML += `<table id="logs-table" class="w-full bg-gray-100 dark:bg-gray-900 buildtable mt-8 p-8 text-gray-700 dark:text-gray-400 border-collapse border border-slate-400 text-center">
             <thead class="sticky top-0 dark:text-gray-400 border-collapse bg-gray-200 border border-slate-400">
-                <tr id="filters">
-                </tr>
             </thead>
         </table>`;
             console.log('Fetched JSON:', data);
@@ -214,12 +212,14 @@ function uploadFileFromForm() {
 }
 
 const drawDataGrid = (json) => {
-    const tableWrapper = $('<div style="max-height: 600px; overflow: auto;"></div>'); // Create a wrapper div for the table
+    const tableWrapper = $('<div style="max-height: 700px; overflow: auto;"></div>'); // Create a wrapper div for the table
     const tableHeaders = Object.keys(json[0]).map(key => ({ title: key, data: key }));
+
     const scStatusColumnIndex = tableHeaders.findIndex(header => header.title === 'sc-status'); // Find the index of the 'sc-status' column
 
+    // Create the table and add data
     const table = $('#logs-table').DataTable({
-        ordering: false,
+        ordering: true,
         data: json,
         columns: tableHeaders,
         paging: true,
@@ -232,13 +232,13 @@ const drawDataGrid = (json) => {
         columnDefs: [
             {
                 targets: '_all',
-                className: 'py-4 px-6 border border-slate-400 max-w-md break-words', // Apply class to all cells
+                className: 'py-1 px-2 border border-slate-400 max-w-md break-words', // Apply class to all cells
             },
             {
                 targets: scStatusColumnIndex, // Use the index of 'sc-status' column
                 createdCell: function (td, cellData, rowData, row, col) {
                     const scStatusValue = parseInt(cellData);
-
+                    $(td).addClass('text-white');
                     if (!isNaN(scStatusValue)) {
                         if (scStatusValue >= 0 && scStatusValue <= 100) {
                             $(td).addClass('bg-gray-300');
@@ -252,29 +252,42 @@ const drawDataGrid = (json) => {
                             $(td).addClass('bg-red-500');
                         }
                     }
-                }
+                },
+                className: 'py-1 px-2 border border-slate-400 max-w-md break-words', // Apply class to all cells
             }
         ],
-        headerCallback: function (thead, data, start, end, display) {
-            $('th', thead).removeClass('sorting_asc sorting_desc sorting');
-            $('th', thead).addClass('your-custom-thead-class'); // Add your custom class to the <th> elements
-        },
         initComplete: function () {
             //$(`#logs-table-loading-table`).remove();
         },
     });
 
+    // Create filter rows outside of header callback
+    const filtersRow = $('<tr></tr>').insertAfter($('#logs-table thead tr'));
+    tableHeaders.forEach(header => {
+        filtersRow.append(`<th class="py-1 px-2 border border-slate-400 max-w-md break-words"></th>`);
+    });
+
     $(`#logs-table`).wrap(tableWrapper); // Wrap the table with the wrapper div
     return table;
 };
+
+
 const buildDataGridFilters = (table, tableId, columnSkipArray) => {
+    const filtersRow = $(`#${tableId} thead tr:eq(1)`); // Get the second row in the thead
+
+    // Clear existing filters by emptying the filter cells
+    filtersRow.find('tr').empty();
+
     // Loop through each column of the DataTable
     table.columns().every(function (col) {
         const column = table.column(this, { search: 'applied' }); // Get the DataTable column object
 
-        // Create a select element and append it to the appropriate table header cell. (1) in this case is the 2nd thead so it doesn't do it on the first where the column names are
+        const filterCell = filtersRow.find('th').eq(column.index());
+        filterCell.html(''); // Clear existing content
+
+        // Create a select element and set it as the HTML content of the table header cell
         const select = $('<select class="text-center m-1 p-1 text-sm text-gray-900 border border-gray-300 rounded bg-gray-50 focus:ring-gray-500 focus:border-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-gray-500 dark:focus:border-gray-500"><option value="">No filter</option></select>')
-            .appendTo($(`#${tableId} thead tr:eq(1) th`).eq(column.index()).empty())
+            .appendTo(filterCell)
             .on('change', function () {
                 const val = $.fn.dataTable.util.escapeRegex(
                     $(this).val()
@@ -309,10 +322,8 @@ const buildDataGridFilters = (table, tableId, columnSkipArray) => {
             select.addClass('border-red-500');
             select.addClass('dark:border-red-500');
         }
-
     });
 };
-
 
 const createPieChart = (name, labels, data) => {
     // Create a parent div for the chart
