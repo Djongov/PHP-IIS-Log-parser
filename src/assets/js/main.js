@@ -64,6 +64,7 @@ function uploadFile(file) {
         body: formData
     })
     .then(response => {
+        loader.classList.add('hidden');
         if (response.ok) {
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
@@ -148,6 +149,7 @@ function uploadFileFromForm() {
         body: formData
     })
     .then(response => {
+        loader.classList.add('hidden');
         if (response.ok) {
             resultDiv.innerHTML += `<div id="loading-screen" class="fixed inset-0 flex items-center justify-center"><div class="w-80 bg-green-500 p-2 rounded-md shadow-md shadow-gray-500 text-white border border-black dark:border-white"><p class="text-center">Loading Data...</p><p class="text-center">Please wait</p></div></div>`;
             const contentType = response.headers.get('content-type');
@@ -213,7 +215,7 @@ function uploadFileFromForm() {
 }
 
 const drawDataGrid = (json) => {
-    const tableWrapper = $('<div style="max-height: 700px; overflow: auto;"></div>'); // Create a wrapper div for the table
+    const tableWrapper = $('<div class="overflow-auto max-h-[44rem]"></div>'); // Create a wrapper div for the table
     const tableHeaders = Object.keys(json[0]).map(key => ({ title: key, data: key }));
 
     const scStatusColumnIndex = tableHeaders.findIndex(header => header.title === 'sc-status'); // Find the index of the 'sc-status' column

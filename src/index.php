@@ -37,10 +37,9 @@ include_once dirname($_SERVER['DOCUMENT_ROOT']) . '/components/page/header.php';
 <!-- Chart Container -->
 <div id="chart-container" class="flex justify-center items-center flex-col md:flex-row flex-wrap mt-14">
 </div>
-<div id="result" class="my-6"></div>
+<div id="result" class="my-6 mx-2"></div>
 <script src=" https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="/assets/js/dataTables.js"></script>
-<script src="/assets/js/dynamitable.jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.3/dist/chart.umd.min.js"></script>
 </body>
 
