@@ -145,7 +145,7 @@ function buildTheLayout($parsed_log, bool $only_errors) {
         // Sort the array so from highest values down
         array_multisort( $requestStatusCodes, SORT_DESC, SORT_NUMERIC, $keys);
         // combine the the arrays
-         $requestStatusCodes = array_combine($keys,  $requestStatusCodes);
+        $requestStatusCodes = array_combine($keys,  $requestStatusCodes);
         // Build the div
         $html .= '<div class="border border-black dark:border-slate-300 p-4 text-black dark:text-gray-400 text-center">';
             // Show total count
