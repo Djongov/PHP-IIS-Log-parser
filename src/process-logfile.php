@@ -71,7 +71,7 @@ do {
     header('Content-Type: application/json');
     echo json_encode($parsed_log, JSON_PRETTY_PRINT);
     include_once dirname($_SERVER['DOCUMENT_ROOT']) . '/functions/actionLog.php';
-    writeToLogFile('Successfully processed ' . $_FILES['file']['name']);
+    writeToLogFile('Successfully processed ' . $_FILES['file']['name'] . ' with total requests of ' . count($parsed_log[0]));
     fclose($opened_file);
     unlink($newFilepath);
     //return var_dump($_FILES);

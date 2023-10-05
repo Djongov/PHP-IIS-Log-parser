@@ -6,7 +6,7 @@ function parseInfoFromFile($file, $correct_lines, $headers) {
             // remove everything starting with #, therefore only real requests
             if (substr($line, 0, 1) !== "#") {
                 // save them to the array
-                array_push($correct_lines, $line);
+                array_push($correct_lines, htmlentities($line));
             }
             // The opposite logic, let's capture anything that starts with # (headers)
             if (substr($line, 0, 1) == "#") {
