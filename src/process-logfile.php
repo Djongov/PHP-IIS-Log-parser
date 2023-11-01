@@ -10,8 +10,8 @@ do {
         break 1;
     }
 
-    if (empty($_FILES) or !isset($_FILES['file'])) {
-        echo '<p class="' . $error_class . '">File exceeds the upload limit of 12MB!</p>';
+    if (empty($_FILES) || !isset($_FILES['file'])) {
+        echo '<p class="' . $error_class . '">There is no file to upload!</p>';
         break 1;
     }
     

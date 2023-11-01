@@ -8,3 +8,7 @@ Code of the praser is public. It doesn't retain the file. It get's deleted once 
 Chart.js for charts and DataTables for displaying the log in a filterable table
 ## Licensing
 MIT - See License file
+
+## Requirements
+finfo PHP extension
+a folder inside /src called uploadsx
