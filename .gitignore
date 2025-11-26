@@ -2,3 +2,5 @@
 action.log
 action.log
 action.log
+/uploadsx/*
+!/uploadsx/.gitkeep
