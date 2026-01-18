@@ -4,3 +4,4 @@ action.log
 action.log
 /uploadsx/*
 !/uploadsx/.gitkeep
+action.log
